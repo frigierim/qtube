@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">QTube</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">QTube server configuration</string>
+
+    <string name="pref_default_port">9090</string>
+    <string name="pref_title_port">QTube server port</string>
+    <string name="pref_default_address">127.0.0.1</string>
+    <string name="pref_title_address">QTube server address</string>
+    <string name="err_resource">No resources on server!</string>
+    <string name="err_mpd">MPD server error!</string>
+    <string name="err_unknown">Unknown error!</string>
+    <string name="success">URL successfully enqueued!</string>
+</resources>

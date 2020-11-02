@@ -1,0 +1,14 @@
+[Unit]
+Description=YouTube Enqueue Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/projects/qtube
+ExecStart=/home/pi/projects/qtube/queueservice
+Restart=on-failure # or always, on-abort, etc
+ExecStop=/bin/kill ${MAINPID}
+
+[Install]
+WantedBy=multi-user.target
