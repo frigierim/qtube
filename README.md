@@ -1,4 +1,4 @@
-#QTube - Enqueue YouTube audio to a MPD server playlist# 
+# QTube - Enqueue YouTube audio to a MPD server playlist # 
 
 Since RaspiCast stopped working for me, possibly because of some server-side changes, I coded this alternative to listen to YouTube music on my RaspBerry Pi.
 
@@ -6,7 +6,7 @@ This project has two separate parts:
 - the server side, which is a microservice running on the RaspBerry Pi, performing the URL extraction via youtube-dl and enqueueing the resulting address to a MPD server
 - the client side, which is an Android application that is a valid share target for the YouTube app, and communicates with the server side
 
-##Prerequisites##
+## Prerequisites ##
 
 To build the server side, you need:
 - a Linux platform (WSL not tested, sorry)
@@ -20,7 +20,7 @@ To *run* the server side, your system must have youtube-dl installed and availab
 To build the client side, Android studio should be enough.
 
 
-##Building the server side##
+## Building the server side ##
 To build the server side, you can use the usual commands:
 
 > mkdir build
@@ -39,10 +39,10 @@ This executable accepts the following parameters:
 A systemd service definition is provided, in case you want to run this at boot time - just copy server/qtube-server.service to /etc/systemd/system and adjust the paths and parameters to your liking.
 
 
-##Building the client side##
+## Building the client side ##
 Use Android Studio to open the *client* folder; there should be no surprises here.
 
-##How to use##
+## How to use ##
 Once you installed the client version on your Android device, you can open the QTube app to configure the connection parameters (address of the machine running the queueservice and port the service is listening on).
 Then, use the YouTube app and search for the video file you want to enqueue to MPD.
 When your desired video is open, click on the three dots menu and select "Share". 
