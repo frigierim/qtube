@@ -11,9 +11,9 @@ This project has two separate parts:
 To build the server side, you need:
 - a Linux platform (WSL not tested, sorry)
 - a decent compiler
-- CMake
-- libmicrohttpd [https://www.gnu.org/software/libmicrohttpd/]
-- libmpdclient  [https://www.musicpd.org/doc/libmpdclient/index.html]
+- [CMake](https://www/cmake.org/)
+- [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/)
+- [libmpdclient](https://www.musicpd.org/doc/libmpdclient/index.html)
 
 To *run* the server side, your system must have youtube-dl installed and available in the path.
 
@@ -23,18 +23,18 @@ To build the client side, Android studio should be enough.
 ## Building the server side ##
 To build the server side, you can use the usual commands:
 
-> mkdir build
-> cd build
-> cmake ../server
-> make
+    mkdir build
+    cd build
+    cmake ../server
+    make
 
 If all prerequisites are satisfied, you should end up with the *queueservice* executable in the build/apps folder.
 
 This executable accepts the following parameters:
 
-> -l [port]       : the port used by the microservice to accept requests from the client - defaults to 9090
-> -s [ip address] : the IP address of the MPD server to enqueue elements to - defaults to 127.0.0.1
-> -p [port]       : the port of the MPD server to enqueue elements to - defaults to 6600
+    -l [port]       : the port used by the microservice to accept requests from the client - defaults to 9090
+    -s [ip address] : the IP address of the MPD server to enqueue elements to - defaults to 127.0.0.1
+    -p [port]       : the port of the MPD server to enqueue elements to - defaults to 6600
 
 A systemd service definition is provided, in case you want to run this at boot time - just copy server/qtube-server.service to /etc/systemd/system and adjust the paths and parameters to your liking.
 
