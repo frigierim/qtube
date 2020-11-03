@@ -12,5 +12,6 @@ typedef enum
 } HLP_RES;
 
 HLP_RES helper_process_url(QTD_ARGS *arguments, const char *url, unsigned int url_len, char *buf, unsigned int buf_size);
+HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len, char *buf, unsigned int buf_size);
 
 #endif // #ifndef _HELPERS_H_

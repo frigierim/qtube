@@ -30,7 +30,7 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, Integer> {
             URL url = new URL("http", host, Integer.valueOf(port), "add?url=" + configs[0].url);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
-            urlConnection.setConnectTimeout(10000);
+            urlConnection.setConnectTimeout(20000);
             urlConnection.connect();
             resCode = urlConnection.getResponseCode();
 

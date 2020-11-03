@@ -91,8 +91,13 @@ static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * co
 {
   char buf[BUFSIZE];
   const char *value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "url");
-	
-  HLP_RES res = helper_process_url(arguments, value, strlen(value), buf, BUFSIZE);
+  HLP_RES res;
+
+  if (strstr(value, "playlist") != NULL)
+  	res = helper_process_playlist(arguments, value, strlen(value), buf, BUFSIZE);
+  else
+  	res = helper_process_url(arguments, value, strlen(value), buf, BUFSIZE);
+  
   switch(res)
   {
     case HLP_SUCCESS:
@@ -114,6 +119,8 @@ static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * co
 static int queuetube_dispatch(QTD_ARGS *arguments, const char *method, const char *url, struct MHD_Connection * connection)
 {
   unsigned int i = 0;
+  *(arguments->qtd_arg_out_stream) << "queuetube_dispatch: handling " << url << std::endl;
+
   for(;i<sizeof(dispatch_table)/sizeof(dispatch_table[0]);++i)
   {
     if (strcmp(method, DISPATCH_METHOD_STRINGS[dispatch_table[i].method]) == 0 && strcmp(url, dispatch_table[i].url) == 0)
