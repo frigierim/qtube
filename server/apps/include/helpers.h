@@ -1,6 +1,8 @@
 #ifndef _HELPERS_H_
 #define _HELPERS_H_
 
+#include <vector>
+#include <string>
 #include "queuetube_daemon.h"
 
 typedef enum
@@ -11,7 +13,7 @@ typedef enum
   HLP_NOPIPE
 } HLP_RES;
 
-HLP_RES helper_process_url(QTD_ARGS *arguments, const char *url, unsigned int url_len, char *buf, unsigned int buf_size);
-HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len, char *buf, unsigned int buf_size);
+HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> &playlist_urls);
+HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len, std::vector<std::string> &playlist_urls);
 
 #endif // #ifndef _HELPERS_H_

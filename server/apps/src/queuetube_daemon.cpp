@@ -1,9 +1,9 @@
-#include <microhttpd.h>
+#include <string>
+#include <vector>
 #include <string.h>
+#include <microhttpd.h>
 #include "queuetube_daemon.h"
 #include "helpers.h"
-
-#define BUFSIZE 2048
 
 static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * connection);
 static int queuetube_service(void *cls, struct MHD_Connection * connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
@@ -89,20 +89,34 @@ static int queuetube_negative_response(struct MHD_Connection * connection, int r
 
 static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * connection)
 {
-  char buf[BUFSIZE];
+  std::vector<std::string> playlist_urls;
+  bool is_playlist = false;
   const char *value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "url");
   HLP_RES res;
 
   if (strstr(value, "playlist") != NULL)
-  	res = helper_process_playlist(arguments, value, strlen(value), buf, BUFSIZE);
+  {
+	is_playlist = true;
+  	res = helper_process_playlist(arguments, value, strlen(value), playlist_urls);
+  }
   else
-  	res = helper_process_url(arguments, value, strlen(value), buf, BUFSIZE);
+  {
+	  std::vector<std::string> url;
+	  url.push_back(value);
+	  res = helper_process_url(arguments, url);
+  }  
   
   switch(res)
   {
     case HLP_SUCCESS:
-      return queuetube_positive_response(connection);
-
+      {
+      	int ret_val = queuetube_positive_response(connection);
+	if (is_playlist)
+	{
+	    res = helper_process_url(arguments, playlist_urls);
+	}
+	return ret_val;
+      }
     case HLP_NOMEM:
     case HLP_NOPIPE:
       return queuetube_negative_response(connection, MHD_HTTP_PRECONDITION_FAILED );
