@@ -89,7 +89,6 @@ static int queuetube_negative_response(struct MHD_Connection * connection, int r
 
 static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * connection)
 {
-  std::vector<std::string> playlist_urls;
   bool is_playlist = false;
   const char *value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "url");
   HLP_RES res;
@@ -97,7 +96,7 @@ static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * co
   if (strstr(value, "playlist") != NULL)
   {
 	is_playlist = true;
-  	res = helper_process_playlist(arguments, value, strlen(value), playlist_urls);
+  	res = helper_process_playlist(arguments, value, strlen(value));
   }
   else
   {
@@ -110,12 +109,7 @@ static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * co
   {
     case HLP_SUCCESS:
       {
-      	int ret_val = queuetube_positive_response(connection);
-	if (is_playlist)
-	{
-	    res = helper_process_url(arguments, playlist_urls);
-	}
-	return ret_val;
+      	return queuetube_positive_response(connection);
       }
     case HLP_NOMEM:
     case HLP_NOPIPE:

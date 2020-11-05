@@ -10,7 +10,7 @@ This project has two separate parts:
 
 To build the server side, you need:
 - a Linux platform (WSL not tested, sorry)
-- a decent compiler
+- a C++11 compiler (thread support is required)
 - [CMake](https://www/cmake.org/)
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/)
 - [libmpdclient](https://www.musicpd.org/doc/libmpdclient/index.html)

@@ -13,7 +13,7 @@ typedef enum
   HLP_NOPIPE
 } HLP_RES;
 
-HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> &playlist_urls);
-HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len, std::vector<std::string> &playlist_urls);
+HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls);
+HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len);
 
 #endif // #ifndef _HELPERS_H_

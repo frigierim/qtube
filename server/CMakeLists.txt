@@ -18,6 +18,7 @@ endif()
 
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	set (CMAKE_CXX_STANDARD 11)
 
 	include(CheckIncludeFile)
   CHECK_INCLUDE_FILE(/usr/include/arm-linux-gnueabihf/jconfig.h RPI)

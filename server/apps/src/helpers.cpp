@@ -1,3 +1,4 @@
+#include <thread>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -10,8 +11,7 @@
 
 #define BUFSIZE 2048
 
-
-HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> &playlist_urls)
+HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls)
 {
     char buf[BUFSIZE];
     struct mpd_connection *conn;
@@ -28,7 +28,6 @@ HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> &playli
     std::vector<std::string>::iterator url_iterator = playlist_urls.begin();
     for(;url_iterator != playlist_urls.end(); ++url_iterator)
     {
-    	*(arguments->qtd_arg_out_stream) << "helper_process_url(): requested URL " << *url_iterator << std::endl;
         complete_cmd += *url_iterator + " ";
     }
 
@@ -57,7 +56,7 @@ HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> &playli
 
             if(mpd_run_add(conn, buf) == false)
             {
-              *arguments->qtd_arg_err_stream << "helper_process_url(): server refused to add stream" << std::endl;
+              *arguments->qtd_arg_err_stream << "helper_process_url(): server refused to add stream" << mpd_connection_get_error_message(conn) << std::endl;
 	      ret_val = HLP_NOSERVER;
 	    }
 	    else
@@ -93,35 +92,31 @@ end:
 }
 
 
-HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len, std::vector<std::string> &playlist_urls)
+static void helper_process_playlist_requests(QTD_ARGS *arguments, std::vector<std::string> playlist_urls)
 {
-    char buf[BUFSIZE];
-    struct mpd_connection *conn;
-    unsigned int ret_length = 0, index = 0;
-    HLP_RES ret_val = HLP_SUCCESS;
-    const char *cmd = "youtube-dl --flat-playlist -j --socket-timeout=20 ";     
-    char single_url[] = "http://youtu.be/XXXXXXXXXXX";
-    const unsigned int ID_OFFSET = sizeof("http://youtu.be/") - 1;
-    const unsigned int ID_LENGTH = 11;
-    const unsigned int SINGLE_URL_LEN = 24;
+	*arguments->qtd_arg_out_stream << "helper_process_playlist_request(): processing elements in playlist - " << playlist_urls.size() << std::endl;
+	std::thread processor(helper_process_url, arguments, playlist_urls);
+	processor.detach();
+}
 
-    unsigned int cmd_len = strlen(cmd) + url_len + 1;
+
+HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len)
+{
+    char buf[BUFSIZE] = {0};
+    std::vector<std::string> playlist_urls;
+    HLP_RES ret_val = HLP_SUCCESS;
+    std::string cmd = "youtube-dl --flat-playlist -j --socket-timeout=20 ";     
+    std::string single_url = "http://youtu.be/";
+    const unsigned int ID_LENGTH = 11;
 
     *(arguments->qtd_arg_out_stream) << "helper_process_playlist(): requested URL " << url << std::endl;
-    memset(buf, BUFSIZE, 0);
-    char * complete_cmd = (char *)malloc(cmd_len);
-    if (complete_cmd == NULL)
-	    return HLP_NOMEM;
+    std::string complete_cmd = cmd + url;
 
-    memcpy(complete_cmd, cmd, cmd_len);
-    strcat(complete_cmd, url);
-    
     FILE *fp;
-    if ((fp = popen(complete_cmd, "r")) == NULL) 
+    if ((fp = popen(complete_cmd.c_str(), "r")) == NULL) 
     {
 	*arguments->qtd_arg_err_stream << "helper_process_playlist(): error opening pipe" << std::endl;
-      	ret_val = HLP_NOPIPE;
-      	goto end;
+      	return HLP_NOPIPE;
     }
 
     // Read one line at a time
@@ -137,8 +132,10 @@ HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned i
 
 		if (*p_url_end == '\"' && p_url_end - p_url == ID_LENGTH)
 		{
-			memcpy(&single_url[ID_OFFSET] ,p_url, ID_LENGTH);
-			playlist_urls.push_back(single_url);	
+			char current_url[ID_LENGTH+1];
+			current_url[ID_LENGTH] = 0;	
+			memcpy(current_url ,p_url, ID_LENGTH);
+			playlist_urls.push_back(single_url + current_url);	
 		}
 	}
     }
@@ -146,12 +143,10 @@ HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned i
     if (fclose(fp) != 0)
     {
 	*arguments->qtd_arg_err_stream << "helper_process_playlist(): youtube-dl could not process URL" << std::endl;
-	ret_val = HLP_NOPIPE;
+	return HLP_NOPIPE;
     }
 
-end:
-
-    free(complete_cmd);
+    helper_process_playlist_requests(arguments, playlist_urls);
     return ret_val;
 
 }
