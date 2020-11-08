@@ -61,7 +61,7 @@ static int queuetube_positive_response(struct MHD_Connection * connection, const
 {
 		struct MHD_Response * response= MHD_create_response_from_buffer (string.length(),
                                                                     (void *)string.c_str(),
-                                                                    MHD_RESPMEM_PERSISTENT);
+                                                                    MHD_RESPMEM_MUST_COPY );
     int ret = MHD_queue_response(connection,
                                 MHD_HTTP_OK,
                                 response);
@@ -75,7 +75,7 @@ static int queuetube_negative_response(struct MHD_Connection * connection, const
 {
 		struct MHD_Response * response= MHD_create_response_from_buffer (string.length(),
                                                                     (void *)string.c_str(),
-                                                                    MHD_RESPMEM_PERSISTENT);
+                                                                   MHD_RESPMEM_MUST_COPY );
     int ret = MHD_queue_response(connection,
                                 MHD_HTTP_SERVICE_UNAVAILABLE,
                                 response);
@@ -104,7 +104,7 @@ static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * co
 	  url.push_back(value);
 	  res = helper_process_url(arguments, url, &response);
   }  
-  
+ 
   switch(res)
   {
     case HLP_SUCCESS:
