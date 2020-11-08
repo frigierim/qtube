@@ -8,12 +8,10 @@
 typedef enum
 {
   HLP_SUCCESS,
-  HLP_NOMEM,
-  HLP_NOSERVER,
-  HLP_NOPIPE
+  HLP_FAILURE,
 } HLP_RES;
 
-HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls);
-HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len);
+HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls, std::string *response);
+HLP_RES helper_process_playlist(QTD_ARGS *arguments, const std::string &url, std::string *response);
 
 #endif // #ifndef _HELPERS_H_

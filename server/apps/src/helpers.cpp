@@ -11,19 +11,26 @@
 
 #define BUFSIZE 2048
 
-HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls)
+HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls, std::string *res_response)
 {
     char buf[BUFSIZE];
     struct mpd_connection *conn;
     unsigned int ret_length = 0;
     HLP_RES ret_val = HLP_SUCCESS;
-    const char *cmd = "youtube-dl --get-url -i -f bestaudio --socket-timeout 20 ";    
+    std::string complete_cmd = "youtube-dl --get-url -i -f bestaudio --socket-timeout 20 ";    
+    std::string response;
 
     memset(buf, BUFSIZE, 0);
-    std::string complete_cmd = cmd;
-    
+    response = "URL successfully submitted";
+
     if (playlist_urls.size() == 0)
-	    return HLP_NOMEM;
+    {
+      response = "No URL requested!";
+	    if (res_response)
+        *res_response = response; 
+      
+      return HLP_FAILURE;
+    }
 
     std::vector<std::string>::iterator url_iterator = playlist_urls.begin();
     for(;url_iterator != playlist_urls.end(); ++url_iterator)
@@ -41,7 +48,8 @@ HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlis
           if ((fp = popen(complete_cmd.c_str(), "r")) == NULL) 
           {
               *arguments->qtd_arg_err_stream << "helper_process_url(): error opening pipe" << std::endl;
-              ret_val = HLP_NOPIPE;
+              response = "Error extracting URL";
+              ret_val = HLP_FAILURE;
               goto end;
           }
 
@@ -52,35 +60,41 @@ HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlis
 
             // remove trailing newline
             buf[ret_length-1] = 0;
-	    *(arguments->qtd_arg_out_stream) << "helper_process_url(): retrieved stream " << buf << std::endl;
+	          *(arguments->qtd_arg_out_stream) << "helper_process_url(): retrieved stream " << buf << std::endl;
 
             if(mpd_run_add(conn, buf) == false)
             {
-              *arguments->qtd_arg_err_stream << "helper_process_url(): server refused to add stream" << mpd_connection_get_error_message(conn) << std::endl;
-	      ret_val = HLP_NOSERVER;
-	    }
-	    else
-	    {
+              const char *mpd_server_err = mpd_connection_get_error_message(conn); 
+              *arguments->qtd_arg_err_stream << "helper_process_url(): server refused to add stream - " << mpd_server_err << std::endl;
+              response = "MPD server error: ";
+              response += mpd_server_err;
+	            ret_val = HLP_FAILURE;
+            }
+            else
+            {
               *arguments->qtd_arg_err_stream << "helper_process_url(): stream successfully added to server" << std::endl;
-	    }
+            }
           }
 
           if (pclose(fp) != 0)
-	  {
-	  	*arguments->qtd_arg_err_stream << "helper_process_url(): youtube-dl could not process URL" << std::endl;
-            	ret_val = HLP_NOPIPE;
-	  }
+          {
+            *arguments->qtd_arg_err_stream << "helper_process_url(): youtube-dl could not process URL" << std::endl;
+            response = "Error processing URL";
+            ret_val = HLP_FAILURE;
+          }
       }
       else
       {
         *arguments->qtd_arg_err_stream << "helper_process_url(): MPD connection error"  << std::endl;
-        ret_val = HLP_NOSERVER;
+        response = "Error connecting to MPD server";
+        ret_val = HLP_FAILURE;
       }
     }
     else
     {
       *arguments->qtd_arg_err_stream << "helper_process_url(): cannot connect to MPD server"  << std::endl;
-      ret_val = HLP_NOSERVER;
+      response = "Error connecting to MPD server";
+      ret_val = HLP_FAILURE;
     }
 
 end:
@@ -88,25 +102,29 @@ end:
     if (conn)
       mpd_connection_free(conn);
     
+    if (res_response)
+      *res_response = response; 
+    
     return ret_val;
 }
 
 
 static void helper_process_playlist_requests(QTD_ARGS *arguments, std::vector<std::string> playlist_urls)
 {
-	*arguments->qtd_arg_out_stream << "helper_process_playlist_request(): processing elements in playlist - " << playlist_urls.size() << std::endl;
-	std::thread processor(helper_process_url, arguments, playlist_urls);
+	*arguments->qtd_arg_out_stream << "helper_process_playlist_request(): processing " << playlist_urls.size() << " elements in playlist" << std::endl;
+	std::thread processor(helper_process_url, arguments, playlist_urls, nullptr);
 	processor.detach();
 }
 
 
-HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned int url_len)
+HLP_RES helper_process_playlist(QTD_ARGS *arguments, const std::string &url, std::string *res_response)
 {
     char buf[BUFSIZE] = {0};
     std::vector<std::string> playlist_urls;
     HLP_RES ret_val = HLP_SUCCESS;
     std::string cmd = "youtube-dl --flat-playlist -j --socket-timeout=20 ";     
     std::string single_url = "http://youtu.be/";
+    std::string response;
     const unsigned int ID_LENGTH = 11;
 
     *(arguments->qtd_arg_out_stream) << "helper_process_playlist(): requested URL " << url << std::endl;
@@ -115,38 +133,51 @@ HLP_RES helper_process_playlist(QTD_ARGS *arguments, const char *url, unsigned i
     FILE *fp;
     if ((fp = popen(complete_cmd.c_str(), "r")) == NULL) 
     {
-	*arguments->qtd_arg_err_stream << "helper_process_playlist(): error opening pipe" << std::endl;
-      	return HLP_NOPIPE;
+	    *arguments->qtd_arg_err_stream << "helper_process_playlist(): error opening pipe" << std::endl;
+      response = "Error extracting URL";
     }
 
     // Read one line at a time
     while ((fgets(buf, BUFSIZE, fp)) != NULL) 
     {
-        buf[strlen(buf)-1] = 0;
-	const char *p_url = strstr(buf, "\"url\": \"");
-	if (p_url)
-	{
-		p_url += sizeof("\"url\": \"")-1;
-		const char *p_url_end = p_url + 1;
-		while(p_url_end < buf + BUFSIZE && *p_url_end != '\"') ++p_url_end;
+      buf[strlen(buf)-1] = 0;
+      const char *p_url = strstr(buf, "\"url\": \"");
+      if (p_url)
+      {
+        p_url += sizeof("\"url\": \"")-1;
+        const char *p_url_end = p_url + 1;
+        while(p_url_end < buf + BUFSIZE && *p_url_end != '\"') ++p_url_end;
 
-		if (*p_url_end == '\"' && p_url_end - p_url == ID_LENGTH)
-		{
-			char current_url[ID_LENGTH+1];
-			current_url[ID_LENGTH] = 0;	
-			memcpy(current_url ,p_url, ID_LENGTH);
-			playlist_urls.push_back(single_url + current_url);	
-		}
-	}
+        if (*p_url_end == '\"' && p_url_end - p_url == ID_LENGTH)
+        {
+          char current_url[ID_LENGTH+1];
+          current_url[ID_LENGTH] = 0;	
+          memcpy(current_url ,p_url, ID_LENGTH);
+          playlist_urls.push_back(single_url + current_url);	
+        }
+      }
     }
 
     if (fclose(fp) != 0)
     {
-	*arguments->qtd_arg_err_stream << "helper_process_playlist(): youtube-dl could not process URL" << std::endl;
-	return HLP_NOPIPE;
+      *arguments->qtd_arg_err_stream << "helper_process_playlist(): youtube-dl could not process URL" << std::endl;
+      response = "Error processng URL";
+      if (res_response)
+        *res_response = response;
+      return HLP_FAILURE;
     }
-
+    else
+    {
+      response = "Extracted ";
+      response += playlist_urls.size();
+      response += " URLs, processing them in background...";
+    }
+    
     helper_process_playlist_requests(arguments, playlist_urls);
+   
+    if (res_response)
+      *res_response = response;
+    
     return ret_val;
 
 }

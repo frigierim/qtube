@@ -1,3 +1,5 @@
 build/
 CMakeFiles/
 .vscode/
+client/.idea
+client/gradle

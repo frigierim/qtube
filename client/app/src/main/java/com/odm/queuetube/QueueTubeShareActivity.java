@@ -27,7 +27,7 @@ public class QueueTubeShareActivity extends AppCompatActivity {
         @Override
         public void onAnimationEnd(Drawable drawable)
         {
-            android.os.SystemClock.sleep(1000);
+            android.os.SystemClock.sleep(2000);
             activity.finishAndRemoveTask();
         }
     }
@@ -39,7 +39,7 @@ public class QueueTubeShareActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_queue_tube_share);
         Bundle extras = getIntent().getExtras();
-        String urlstring = extras.getString(Intent.EXTRA_TEXT);
+        String url_string = extras.getString(Intent.EXTRA_TEXT);
         anim_wait = AnimatedVectorDrawableCompat.create(this, R.drawable.wait);
         anim_cross = AnimatedVectorDrawableCompat.create(this, R.drawable.cross);
         anim_cross.registerAnimationCallback(cb);
@@ -49,34 +49,23 @@ public class QueueTubeShareActivity extends AppCompatActivity {
         ImageView img_view = findViewById(R.id.image_id);
         img_view.setImageDrawable(anim_wait);
         anim_wait.start();
-        new PostPageTask().execute(new PostPageTaskConfig(this, urlstring));
+        new PostPageTask().execute(new PostPageTaskConfig(this, url_string));
     }
 
-    public void onComplete(int result)
+    public void onComplete(PostPageTask.QueueServerResponse response)
     {
         ImageView img_view = findViewById(R.id.image_id);
         TextView txt = findViewById(R.id.textView);
+        txt.setText(response.qsr_string);
 
-        if (result == 200)
+        if (response.qsr_code == 200)
         {
             img_view.setImageDrawable(anim_check);
             anim_check.start();
-            txt.setText(R.string.success);
         }
         else
         {
             img_view.setImageDrawable(anim_cross);
-
-            if (result == 412)
-                // no memory or other resources
-                txt.setText(R.string.err_resource);
-            else if(result == 503)
-                // MPD server error
-                txt.setText(R.string.err_mpd);
-            else
-                // Unknown error
-                txt.setText(R.string.err_unknown);
-
             anim_cross.start();
         }
     }

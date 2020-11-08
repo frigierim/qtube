@@ -57,11 +57,10 @@ void qtd_deinitialize(void *h)
 
 // PRIVATE API /////////////////////////////////////////////////////////////////
 
-static int queuetube_positive_response(struct MHD_Connection * connection)
+static int queuetube_positive_response(struct MHD_Connection * connection, const std::string &string)
 {
-    const char * page = "<html><head><title>QueueTube</title></head><body>OK</body></html>";
-		struct MHD_Response * response= MHD_create_response_from_buffer (strlen(page),
-                                                                    (void*) page,
+		struct MHD_Response * response= MHD_create_response_from_buffer (string.length(),
+                                                                    (void *)string.c_str(),
                                                                     MHD_RESPMEM_PERSISTENT);
     int ret = MHD_queue_response(connection,
                                 MHD_HTTP_OK,
@@ -72,14 +71,13 @@ static int queuetube_positive_response(struct MHD_Connection * connection)
     return ret;
 }
 
-static int queuetube_negative_response(struct MHD_Connection * connection, int response_code)
+static int queuetube_negative_response(struct MHD_Connection * connection, const std::string & string )
 {
-    const char * page = "<html><head><title>QueueTube</title></head><body>ERR</body></html>";
-		struct MHD_Response * response= MHD_create_response_from_buffer (strlen(page),
-                                                                    (void*) page,
+		struct MHD_Response * response= MHD_create_response_from_buffer (string.length(),
+                                                                    (void *)string.c_str(),
                                                                     MHD_RESPMEM_PERSISTENT);
     int ret = MHD_queue_response(connection,
-                                response_code,
+                                MHD_HTTP_SERVICE_UNAVAILABLE,
                                 response);
   		
 		MHD_destroy_response(response);
@@ -90,38 +88,37 @@ static int queuetube_negative_response(struct MHD_Connection * connection, int r
 static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * connection)
 {
   bool is_playlist = false;
+  std::string response;
+
   const char *value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "url");
   HLP_RES res;
 
   if (strstr(value, "playlist") != NULL)
   {
-	is_playlist = true;
-  	res = helper_process_playlist(arguments, value, strlen(value));
+	  is_playlist = true;
+  	res = helper_process_playlist(arguments, value, &response);
   }
   else
   {
 	  std::vector<std::string> url;
 	  url.push_back(value);
-	  res = helper_process_url(arguments, url);
+	  res = helper_process_url(arguments, url, &response);
   }  
   
   switch(res)
   {
     case HLP_SUCCESS:
       {
-      	return queuetube_positive_response(connection);
+      	return queuetube_positive_response(connection, response);
       }
-    case HLP_NOMEM:
-    case HLP_NOPIPE:
-      return queuetube_negative_response(connection, MHD_HTTP_PRECONDITION_FAILED );
-
-    case HLP_NOSERVER:
-      return queuetube_negative_response(connection, MHD_HTTP_SERVICE_UNAVAILABLE);
+    
+    case HLP_FAILURE:
+      return queuetube_negative_response(connection, response);
 
     default:
       break;
   }
-  return queuetube_negative_response(connection, MHD_HTTP_NOT_FOUND);
+  return queuetube_negative_response(connection, "Invalid request!");
 }
 
 static int queuetube_dispatch(QTD_ARGS *arguments, const char *method, const char *url, struct MHD_Connection * connection)
@@ -137,7 +134,7 @@ static int queuetube_dispatch(QTD_ARGS *arguments, const char *method, const cha
     }
   }
   
-  return queuetube_negative_response(connection, MHD_HTTP_NOT_ACCEPTABLE);
+  return queuetube_negative_response(connection, "Invalid request");
 }
 
 static int queuetube_service(void *                 cls,

@@ -9,15 +9,29 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, Integer> {
+public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, PostPageTask.QueueServerResponse> {
 
     PostPageTaskConfig cfg;
 
+    public class QueueServerResponse
+    {
+        int qsr_code;
+        String qsr_string;
+
+        QueueServerResponse(int code, String string)
+        {
+            qsr_code = code;
+            qsr_string = string;
+        }
+    }
+
     @Override
-    protected Integer doInBackground(PostPageTaskConfig... configs) {
+    protected QueueServerResponse doInBackground(PostPageTaskConfig... configs) {
         cfg = configs[0];
         HttpURLConnection urlConnection = null;
         int resCode = 0;
+        String resBody = "Unknown error!";
+
         try {
             String host = PreferenceManager
                     .getDefaultSharedPreferences(configs[0].context)
@@ -33,6 +47,7 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, Integer> {
             urlConnection.setConnectTimeout(20000);
             urlConnection.connect();
             resCode = urlConnection.getResponseCode();
+            resBody = urlConnection.getResponseMessage();
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -47,12 +62,12 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, Integer> {
             if (urlConnection != null)
                 urlConnection.disconnect();
         }
-        return resCode;
+        return new QueueServerResponse(resCode, resBody);
     }
 
-    protected void onPostExecute(Integer result) {
+    protected void onPostExecute(QueueServerResponse result) {
         // Terminate instance
         QueueTubeShareActivity act = (QueueTubeShareActivity)cfg.context;
-        act.onComplete(result.intValue());
+        act.onComplete(result);
     }
 }
