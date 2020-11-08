@@ -4,7 +4,9 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,7 +32,7 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, PostPageTa
         cfg = configs[0];
         HttpURLConnection urlConnection = null;
         int resCode = 0;
-        String resBody = "Unknown error!";
+        String resBody = "";
 
         try {
             String host = PreferenceManager
@@ -47,15 +49,32 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, PostPageTa
             urlConnection.setConnectTimeout(20000);
             urlConnection.connect();
             resCode = urlConnection.getResponseCode();
-            resBody = urlConnection.getResponseMessage();
+
+            BufferedReader br;
+            String rb;
+            if (100 <= resCode && resCode <= 399)
+            {
+                br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            }
+            else
+            {
+                br = new BufferedReader(new InputStreamReader(urlConnection.getErrorStream()));
+            }
+            
+            while((rb = br.readLine()) != null)
+            {
+                resBody += rb;
+            }
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            resBody = "Malformed URL!";
         } catch (IOException e) {
-            // Error reported by service
+            resBody = "Server is unreachable!";
         }
         catch (Exception e)
         {
+            resBody = "Generic exception!";
             e.printStackTrace();
         }
         finally {
