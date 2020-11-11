@@ -54,7 +54,7 @@ bool read_params(int argc, char ** argv, QTD_ARGS *p_args)
   struct sockaddr_in sa;
 
   int opt;
-  while ((opt = getopt(argc, argv, "dhl:s:p:")) != -1) 
+  while ((opt = getopt(argc, argv, "dhl:s:p:w:")) != -1) 
   {
       switch (opt) 
       {
@@ -77,10 +77,14 @@ bool read_params(int argc, char ** argv, QTD_ARGS *p_args)
           case 'p':
               p_args->qtd_arg_mpc_port = atoi(optarg);
               break;
-         
+        
+	  case 'w':
+              p_args->qtd_arg_password = optarg;
+              break;
+
 	  case 'h': 
           default: /* '?' */
-              std::cerr << "Usage: " << argv[0] << " [-l service_port] [-s mpd_address] [-p mpd_port] [-d]" << std::endl;
+              std::cerr << "Usage: " << argv[0] << " [-l service_port] [-s mpd_address] [-p mpd_port] [-w reset_password] [-d]" << std::endl;
               return false;
       }
   }
@@ -103,6 +107,7 @@ int main(int argc, char **argv)
   arguments.qtd_arg_listening_port = 9090;
   arguments.qtd_arg_mpc_server = "127.0.0.1";
   arguments.qtd_arg_mpc_port = 6600;
+  arguments.qtd_arg_password = NULL;
   arguments.qtd_arg_debug = false;
 
   if (read_params(argc, argv, &arguments) == false)

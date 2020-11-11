@@ -6,6 +6,7 @@
 #include "helpers.h"
 
 static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * connection);
+static int queuetube_reset_handler(QTD_ARGS *arguments, struct MHD_Connection * connection);
 static int queuetube_service(void *cls, struct MHD_Connection * connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
 
 typedef int(* DISPATCH_FUNCTION)(QTD_ARGS *, struct MHD_Connection *);
@@ -30,7 +31,8 @@ static struct
   DISPATCH_FUNCTION dispatch_fun;
 } dispatch_table[] =
 {
-  METHOD_GET, MAKE_URL("/add"), queuetube_add_handler
+	{ METHOD_GET, MAKE_URL("/add"), queuetube_add_handler},
+	{ METHOD_GET, MAKE_URL("/reset"), queuetube_reset_handler}
 };
 
 
@@ -104,6 +106,29 @@ static int queuetube_add_handler(QTD_ARGS *arguments, struct MHD_Connection * co
 	  url.push_back(value);
 	  res = helper_process_url(arguments, url, &response);
   }  
+ 
+  switch(res)
+  {
+    case HLP_SUCCESS:
+      {
+      	return queuetube_positive_response(connection, response);
+      }
+    
+    case HLP_FAILURE:
+      return queuetube_negative_response(connection, response);
+
+    default:
+      break;
+  }
+  return queuetube_negative_response(connection, "Invalid request!");
+}
+
+static int queuetube_reset_handler(QTD_ARGS *arguments, struct MHD_Connection * connection)
+{
+  std::string response;
+
+  const char *value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "pw");
+  HLP_RES res = helper_reset(arguments, value, response);
  
   switch(res)
   {

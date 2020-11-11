@@ -118,6 +118,49 @@ static void helper_process_playlist_requests(QTD_ARGS *arguments, std::vector<st
 	processor.detach();
 }
 
+HLP_RES helper_reset(QTD_ARGS *arguments, const std::string &password, std::string &response)
+{
+    const std::string cmd_stop = "sudo service mopidy stop";     
+    const std::string cmd_start = "sudo service mopidy start";     
+    if (arguments->qtd_arg_password != NULL && password == std::string(arguments->qtd_arg_password))
+    {
+	    FILE *fp;
+	    if ((fp = popen(cmd_stop.c_str(), "r")) == NULL) 
+	    {
+	      *arguments->qtd_arg_err_stream << "helper_reset(): error opening pipe" << std::endl;
+	      response = "Error stopping server\n";
+	      return HLP_FAILURE; 
+	    }
+	    if (pclose(fp) != 0)
+	    {
+	      *arguments->qtd_arg_err_stream << "helper_reset(): error reported stopping the service" << std::endl;
+	      response = "Error stopping server\n";
+	      return HLP_FAILURE; 
+	    }
+
+	    
+	    if ((fp = popen(cmd_start.c_str(), "r")) == NULL) 
+	    {
+	      *arguments->qtd_arg_err_stream << "helper_reset(): error opening pipe" << std::endl;
+	      response = "Error starting server\n";
+	      return HLP_FAILURE; 
+	    }
+	    if (pclose(fp) != 0)
+	    {
+	      *arguments->qtd_arg_err_stream << "helper_reset(): error reported starting the service" << std::endl;
+	      response = "Error starting server\n";
+	      return HLP_FAILURE; 
+	    }
+	    response = "Server restarted successfully";
+	    return HLP_SUCCESS;
+    }
+    else
+    {
+      sleep(5);
+      response = "helper_reset(): invalid password";
+      return HLP_FAILURE;
+    }
+}
 
 HLP_RES helper_process_playlist(QTD_ARGS *arguments, const std::string &url, std::string *res_response)
 {

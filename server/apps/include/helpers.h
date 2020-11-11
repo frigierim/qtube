@@ -13,5 +13,6 @@ typedef enum
 
 HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlist_urls, std::string *response);
 HLP_RES helper_process_playlist(QTD_ARGS *arguments, const std::string &url, std::string *response);
+HLP_RES helper_reset(QTD_ARGS *arguments, const std::string &password, std::string &res_response);
 
 #endif // #ifndef _HELPERS_H_

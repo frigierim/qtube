@@ -8,6 +8,7 @@ typedef struct
   const char *    qtd_arg_mpc_server;
   std::ostream *  qtd_arg_out_stream;
   std::ostream *  qtd_arg_err_stream;
+  const char *    qtd_arg_password;
   unsigned short  qtd_arg_listening_port;
   unsigned short  qtd_arg_mpc_port;
   bool            qtd_arg_debug;
