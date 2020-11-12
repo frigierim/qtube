@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class QueueTubeShareActivity extends AppCompatActivity {
+public class QueueTubeShareActivity extends AppCompatActivity implements QueueTubeActivity {
 
     private AnimatedVectorDrawableCompat anim_wait = null;
     private AnimatedVectorDrawableCompat anim_check = null;
@@ -49,7 +49,7 @@ public class QueueTubeShareActivity extends AppCompatActivity {
         ImageView img_view = findViewById(R.id.image_id);
         img_view.setImageDrawable(anim_wait);
         anim_wait.start();
-        new PostPageTask().execute(new PostPageTaskConfig(this, url_string));
+        new PostPageTask().execute(new PostPageTaskConfig(this, url_string, PostPageTaskConfig.POST_ACTION.SEND_URL));
     }
 
     public void onComplete(PostPageTask.QueueServerResponse response)

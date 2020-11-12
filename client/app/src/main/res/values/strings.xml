@@ -10,8 +10,11 @@
     <string name="pref_title_port">QTube server port</string>
     <string name="pref_default_address">127.0.0.1</string>
     <string name="pref_title_address">QTube server address</string>
+    <string name="pref_default_reset_pw"></string>
+    <string name="pref_title_reset_pw">Reset password</string>
     <string name="err_resource">No resources on server!</string>
     <string name="err_mpd">MPD server error!</string>
     <string name="err_unknown">Unknown error!</string>
     <string name="success">URL successfully enqueued!</string>
+    <string name="action_reset">Reset</string>
 </resources>
