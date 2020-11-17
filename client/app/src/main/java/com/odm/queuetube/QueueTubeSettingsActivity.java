@@ -17,7 +17,10 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -32,7 +35,7 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class QueueTubeSettingsActivity extends AppCompatPreferenceActivity {
+public class QueueTubeSettingsActivity extends AppCompatPreferenceActivity implements QueueTubeActivity {
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -79,6 +82,15 @@ public class QueueTubeSettingsActivity extends AppCompatPreferenceActivity {
                         .getString(preference.getKey(), ""));
     }
 
+    public void resetRemoteServer()
+    {
+        String pw = PreferenceManager
+                .getDefaultSharedPreferences(this)
+                .getString("reset_password", "");
+
+        new PostPageTask().execute(new PostPageTaskConfig(this, pw, PostPageTaskConfig.POST_ACTION.RESET));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,6 +106,34 @@ public class QueueTubeSettingsActivity extends AppCompatPreferenceActivity {
             // Show the Up button in the action bar.
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_reset:
+                resetRemoteServer();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.settings, menu);
+        return true;
+    }
+
+    public void onComplete(PostPageTask.QueueServerResponse response)
+    {
+        Toast toast = Toast.makeText(this, response.qsr_string, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     /**
@@ -140,6 +180,7 @@ public class QueueTubeSettingsActivity extends AppCompatPreferenceActivity {
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("address"));
             bindPreferenceSummaryToValue(findPreference("port"));
+            bindPreferenceSummaryToValue(findPreference("reset_password"));
         }
 
         @Override

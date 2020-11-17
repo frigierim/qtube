@@ -43,7 +43,20 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, PostPageTa
                     .getDefaultSharedPreferences(configs[0].context)
                     .getString("port", "");
 
-            URL url = new URL("http", host, Integer.valueOf(port), "add?url=" + configs[0].url);
+            String password= PreferenceManager
+                    .getDefaultSharedPreferences(configs[0].context)
+                    .getString("reset_password", "");
+
+            URL url = null;
+
+            if (cfg.action == PostPageTaskConfig.POST_ACTION.SEND_URL)
+                url = new URL("http", host, Integer.valueOf(port), "add?url=" + configs[0].url);
+
+            else if (cfg.action == PostPageTaskConfig.POST_ACTION.RESET)
+                url = new URL("http", host, Integer.valueOf(port), "reset?pw=" + password);
+            else
+                return null;
+
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.setConnectTimeout(20000);
@@ -86,7 +99,7 @@ public class PostPageTask extends AsyncTask<PostPageTaskConfig, Void, PostPageTa
 
     protected void onPostExecute(QueueServerResponse result) {
         // Terminate instance
-        QueueTubeShareActivity act = (QueueTubeShareActivity)cfg.context;
+        QueueTubeActivity act = (QueueTubeActivity)cfg.context;
         act.onComplete(result);
     }
 }
