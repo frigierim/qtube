@@ -17,7 +17,7 @@ HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlis
     struct mpd_connection *conn;
     unsigned int ret_length = 0;
     HLP_RES ret_val = HLP_SUCCESS;
-    std::string complete_cmd = "youtube-dl --get-url -i -f bestaudio --socket-timeout 20 ";    
+    std::string complete_cmd = "youtube-dl --get-url -i -f bestaudio --youtube-skip-dash-manifest --socket-timeout 20 ";    
     std::string response;
 
     memset(buf, BUFSIZE, 0);
@@ -32,9 +32,12 @@ HLP_RES helper_process_url(QTD_ARGS *arguments, std::vector<std::string> playlis
       return HLP_FAILURE;
     }
 
+    *(arguments->qtd_arg_out_stream) << "helper_process_url(): requested URLs " << std::endl;
+
     std::vector<std::string>::iterator url_iterator = playlist_urls.begin();
     for(;url_iterator != playlist_urls.end(); ++url_iterator)
     {
+    	*(arguments->qtd_arg_out_stream) << "helper_process_url(): ==> " << *url_iterator << std::endl;
         complete_cmd += *url_iterator + " ";
     }
 
@@ -122,6 +125,7 @@ HLP_RES helper_reset(QTD_ARGS *arguments, const std::string &password, std::stri
 {
     const std::string cmd_stop = "sudo service mopidy stop";     
     const std::string cmd_start = "sudo service mopidy start";     
+    *arguments->qtd_arg_err_stream << "helper_reset(): requested reset with password " << password << std::endl;
     if (arguments->qtd_arg_password != NULL && password == std::string(arguments->qtd_arg_password))
     {
 	    FILE *fp;
